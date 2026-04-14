@@ -1,0 +1,8 @@
+# Build output
+Heis_test
+*.exe
+*.test
+*.out
+
+# Go workspace
+vendor/
