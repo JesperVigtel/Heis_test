@@ -79,6 +79,15 @@ func Assign(
 	return result
 }
 
+// btnToDir maps a hall button type to the corresponding motor direction.
+// BT_HallUp → MD_Up, BT_HallDown → MD_Down.
+func btnToDir(btn elevio.ButtonType) elevio.MotorDirection {
+	if btn == elevio.BT_HallUp {
+		return elevio.MD_Up
+	}
+	return elevio.MD_Down
+}
+
 // cost estimates the time (in simulated floor-travel units) for the elevator e
 // to service a hall request at targetFloor with button type btn.
 func cost(e ElevatorState, targetFloor int, btn elevio.ButtonType) int {
@@ -97,10 +106,9 @@ func cost(e ElevatorState, targetFloor int, btn elevio.ButtonType) int {
 
 	for {
 		if d == targetFloor {
+			requestedDir := btnToDir(btn)
 			switch {
-			case btn == elevio.BT_HallUp && dir == elevio.MD_Up:
-				return duration
-			case btn == elevio.BT_HallDown && dir == elevio.MD_Down:
+			case dir == requestedDir:
 				return duration
 			case dir == elevio.MD_Stop:
 				return duration

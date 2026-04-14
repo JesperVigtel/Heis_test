@@ -84,7 +84,7 @@ func Receiver(port int, updates chan<- PeerUpdate) {
 		// Check for timed-out peers
 		select {
 		case <-checkTimeout.C:
-			var lost []string
+			lost := make([]string, 0, len(peerLastSeen))
 			now := time.Now()
 			for id, t := range peerLastSeen {
 				if now.Sub(t) > peerTimeout {
