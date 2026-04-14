@@ -265,21 +265,14 @@ func main() {
 			if hallMsg.SenderID == id {
 				continue // our own broadcast
 			}
-			// Merge incoming hall requests (OR)
+			// Merge incoming hall requests (OR only: a peer may have just
+			// started and will have an empty table, so we must never clear
+			// a request just because the sender doesn't have it).
 			changed := false
 			for f := 0; f < elevio.NumFloors; f++ {
 				for b := 0; b < 2; b++ {
 					if hallMsg.HallRequests[f][b] && !hallRequests[f][b] {
 						hallRequests[f][b] = true
-						changed = true
-					}
-				}
-			}
-			// Also clear requests that the sender cleared
-			for f := 0; f < elevio.NumFloors; f++ {
-				for b := 0; b < 2; b++ {
-					if !hallMsg.HallRequests[f][b] && hallRequests[f][b] {
-						hallRequests[f][b] = false
 						changed = true
 					}
 				}
