@@ -71,8 +71,17 @@ func write(msg []byte) {
 	}
 }
 
-func read(buf []byte) {
-	_, err := _conn.Read(buf)
+// writeRead sends a read-command and reads the 4-byte reply atomically under
+// the mutex, preventing concurrent polling goroutines from interleaving their
+// request/response pairs.
+func writeRead(msg []byte, buf []byte) {
+	_mtx.Lock()
+	defer _mtx.Unlock()
+	_, err := _conn.Write(msg)
+	if err != nil {
+		fmt.Printf("elevio: write error: %v\n", err)
+	}
+	_, err = _conn.Read(buf)
 	if err != nil {
 		fmt.Printf("elevio: read error: %v\n", err)
 	}
@@ -117,9 +126,8 @@ func SetStopLamp(value bool) {
 
 // GetFloor returns the current floor sensor value (-1 if between floors).
 func GetFloor() int {
-	write([]byte{6, 0, 0, 0})
 	var buf [4]byte
-	read(buf[:])
+	writeRead([]byte{7, 0, 0, 0}, buf[:])
 	if buf[1] == 0 {
 		return -1
 	}
@@ -128,25 +136,22 @@ func GetFloor() int {
 
 // GetButton returns true if the given button is currently pressed.
 func GetButton(button ButtonType, floor int) bool {
-	write([]byte{7, byte(button), byte(floor), 0})
 	var buf [4]byte
-	read(buf[:])
+	writeRead([]byte{6, byte(button), byte(floor), 0}, buf[:])
 	return buf[1] != 0
 }
 
 // GetObstruction returns true if the obstruction switch is active.
 func GetObstruction() bool {
-	write([]byte{9, 0, 0, 0})
 	var buf [4]byte
-	read(buf[:])
+	writeRead([]byte{9, 0, 0, 0}, buf[:])
 	return buf[1] != 0
 }
 
 // GetStop returns true if the stop button is pressed.
 func GetStop() bool {
-	write([]byte{8, 0, 0, 0})
 	var buf [4]byte
-	read(buf[:])
+	writeRead([]byte{8, 0, 0, 0}, buf[:])
 	return buf[1] != 0
 }
 
